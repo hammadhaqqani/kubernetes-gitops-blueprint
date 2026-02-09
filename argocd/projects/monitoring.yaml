@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  description: Monitoring stack project
+  sourceRepos:
+    - 'https://github.com/hammadhaqqani/kubernetes-gitops-blueprint'
+    - 'https://prometheus-community.github.io/helm-charts'
+    - 'https://grafana.github.io/helm-charts'
+  destinations:
+    - namespace: monitoring
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: '*'
+    - group: 'apps'
+      kind: '*'
+    - group: 'networking.k8s.io'
+      kind: '*'
+    - group: 'monitoring.coreos.com'
+      kind: '*'
+  roles:
+    - name: admin
+      description: Admin role with full access
+      policies:
+        - p, proj:monitoring:admin, applications, *, monitoring/*, allow
+        - p, proj:monitoring:admin, repositories, get, *, allow
+      groups:
+        - argocd-admins

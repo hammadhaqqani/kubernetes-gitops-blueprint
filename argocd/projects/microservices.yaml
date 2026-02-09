@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: microservices
+  namespace: argocd
+spec:
+  description: Microservices application project
+  sourceRepos:
+    - 'https://github.com/hammadhaqqani/kubernetes-gitops-blueprint'
+    - 'https://charts.bitnami.com/bitnami'
+    - 'https://prometheus-community.github.io/helm-charts'
+  destinations:
+    - namespace: 'microservices-*'
+      server: https://kubernetes.default.svc
+    - namespace: default
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: '*'
+    - group: 'apps'
+      kind: '*'
+    - group: 'networking.k8s.io'
+      kind: '*'
+    - group: 'autoscaling'
+      kind: '*'
+  roles:
+    - name: admin
+      description: Admin role with full access
+      policies:
+        - p, proj:microservices:admin, applications, *, microservices/*, allow
+        - p, proj:microservices:admin, repositories, get, *, allow
+      groups:
+        - argocd-admins
+    - name: readonly
+      description: Read-only access
+      policies:
+        - p, proj:microservices:readonly, applications, get, microservices/*, allow

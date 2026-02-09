@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+      - name: Build and push Docker images
+        strategy:
+          matrix:
+            service: [api-service, worker-service]
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:v${{ steps.version.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create Helm package
+        run: |
+          helm package helm-charts/api-service
+          helm package helm-charts/worker-service
+          helm package helm-charts/redis
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ steps.version.outputs.version }}
+          body: |
+            ## Release v${{ steps.version.outputs.version }}
+
+            ### Changes
+            - Updated Helm charts
+            - Updated Docker images
+
+            ### Docker Images
+            - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api-service:v${{ steps.version.outputs.version }}`
+            - `${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/worker-service:v${{ steps.version.outputs.version }}`
+
+            ### Helm Charts
+            See attached helm chart packages.
+          files: |
+            api-service-*.tgz
+            worker-service-*.tgz
+            redis-*.tgz
+          draft: false
+          prerelease: false
+
+      - name: Update ArgoCD application manifests
+        run: |
+          # Update image tags in ArgoCD application manifests
+          sed -i "s/tag: \".*\"/tag: \"v${{ steps.version.outputs.version }}\"/g" argocd/applications/*.yaml || true
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add argocd/applications/*.yaml
+          git commit -m "chore: update image tags to v${{ steps.version.outputs.version }}" || exit 0
+          git push

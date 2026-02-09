@@ -1,0 +1,15 @@
+apiVersion: v2
+name: redis
+description: A Helm chart for Redis cache
+type: application
+version: 1.0.0
+appVersion: "7.2.0"
+keywords:
+  - redis
+  - cache
+  - database
+maintainers:
+  - name: hammadhaqqani
+home: https://github.com/hammadhaqqani/kubernetes-gitops-blueprint
+sources:
+  - https://github.com/hammadhaqqani/kubernetes-gitops-blueprint
