@@ -1,5 +1,8 @@
 # Kubernetes GitOps Blueprint
 
+[![CI](https://github.com/hammadhaqqani/kubernetes-gitops-blueprint/actions/workflows/ci.yml/badge.svg)](https://github.com/hammadhaqqani/kubernetes-gitops-blueprint/actions/workflows/ci.yml)
+[![Release](https://github.com/hammadhaqqani/kubernetes-gitops-blueprint/actions/workflows/release.yml/badge.svg)](https://github.com/hammadhaqqani/kubernetes-gitops-blueprint/actions/workflows/release.yml)
+[![GitHub Pages](https://github.com/hammadhaqqani/kubernetes-gitops-blueprint/actions/workflows/pages.yml/badge.svg)](https://hammadhaqqani.github.io/kubernetes-gitops-blueprint/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Kubernetes](https://img.shields.io/badge/kubernetes-v1.28+-blue.svg)](https://kubernetes.io/)
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-v2.8+-blue.svg)](https://argoproj.github.io/cd/)
